@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eu_ - Gestão de Processos de TI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #a0a0a0;
+            letter-spacing: 2px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 210, 255, 0.2);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #00d2ff;
+        }
+
+        .card-desc {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        .framework {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 60px;
+        }
+
+        .framework h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #00d2ff;
+        }
+
+        .framework-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .step {
+            background: rgba(0, 210, 255, 0.1);
+            border-left: 4px solid #00d2ff;
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .step-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #00d2ff;
+        }
+
+        .status-label {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .live-badge {
+            display: inline-block;
+            background: #00ff88;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="live-badge pulse">● ATIVO</div>
+            <div class="logo">eu_</div>
+            <div class="subtitle">GESTÃO DE PROCESSOS DE TI</div>
+        </header>
+
+        <section class="cards">
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <div class="card-title">Demandas</div>
+                <div class="card-desc">Registro e acompanhamento completo do ciclo de vida de cada demanda, desde a concepção até a entrega.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Relatórios</div>
+                <div class="card-desc">Relatórios executivos prontos para exportação em Word e Excel para apresentação à diretoria.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">⚙️</div>
+                <div class="card-title">Processos</div>
+                <div class="card-desc">Documentação de processos, fluxos de trabalho e boas práticas de governança de TI.</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">📁</div>
+                <div class="card-title">Templates</div>
+                <div class="card-desc">Templates reutilizáveis para padronizar entregas e acelerar a criação de novos documentos.</div>
+            </div>
+        </section>
+
+        <section class="framework">
+            <h2>Framework de Trabalho</h2>
+            <div class="framework-steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <div class="step-title">Visão Geral e Escopo</div>
+                    <div class="step-desc">Resumo executivo e critérios de aceite para cada demanda.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <div class="step-title">Cronograma de Execução</div>
+                    <div class="step-desc">Fases claras: Concepção, Desenvolvimento, Validação e Implantação.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <div class="step-title">Estimativa de Prazos</div>
+                    <div class="step-desc">Análise de complexidade e tempo estimado por etapa com margem de segurança.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">04</div>
+                    <div class="step-title">Análise de Riscos</div>
+                    <div class="step-desc">Identificação de gargalos e planos de contingência robustos.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">05</div>
+                    <div class="step-title">Impacto Multi-Área</div>
+                    <div class="step-desc">Avaliação de como a entrega afeta tecnologia, operações e diretoria.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">06</div>
+                    <div class="step-title">Relatórios Executivos</div>
+                    <div class="step-desc">Conteúdo pronto em formato tabular e textual para a diretoria.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="status-bar">
+            <div class="status-item">
+                <div class="status-value">6</div>
+                <div class="status-label">Etapas do Framework</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value">5</div>
+                <div class="status-label">Áreas de Impacto</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value">4</div>
+                <div class="status-label">Fases de Execução</div>
+            </div>
+        </section>
+
+        <footer>
+            <p>eu_ © 2026 | TechProcess Master Agent | Gestão de Processos de TI</p>
+        </footer>
+    </div>
+</body>
+</html>
