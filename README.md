@@ -1,4 +1,4 @@
-# eu_ - Gestão de Processos de TI
+# eu_gestão - Gestão de Processos de TI
 
 Repositório dedicado à estruturação, planejamento e monitoramento de demandas de tecnologia e processos.
 

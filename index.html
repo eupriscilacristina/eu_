@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eu_ | TechProcess Master Agent</title>
+    <title>eu_gestão | TechProcess Master Agent</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -545,7 +545,7 @@
                 <span class="status-dot"></span>
                 <span>SYSTEM ONLINE | TechProcess Master Agent v2.0</span>
             </div>
-            <div class="logo">eu_</div>
+            <div class="logo">eu_gestão</div>
             <div class="tagline">// GESTÃO INTELIGENTE DE PROCESSOS DE TI //</div>
         </header>
 
@@ -928,8 +928,8 @@
 
     <script>
         // Data storage
-        let demandas = JSON.parse(localStorage.getItem('eu_demandas') || '[]');
-        let riscos = JSON.parse(localStorage.getItem('eu_riscos') || '[]');
+        let demandas = JSON.parse(localStorage.getItem('eugestao_demandas') || '[]');
+        let riscos = JSON.parse(localStorage.getItem('eugestao_riscos') || '[]');
 
         // Navigation
         function showPanel(panelId) {
@@ -1008,7 +1008,7 @@
         function excluirDemanda(index) {
             if (confirm('Excluir esta demanda?')) {
                 demandas.splice(index, 1);
-                localStorage.setItem('eu_demandas', JSON.stringify(demandas));
+            localStorage.setItem('eugestao_demandas', JSON.stringify(demandas));
                 atualizarTabelaDemandas();
                 atualizarMetricas();
                 showToast('Demanda excluída!');
@@ -1042,7 +1042,7 @@
             }
 
             riscos.push(risco);
-            localStorage.setItem('eu_riscos', JSON.stringify(riscos));
+            localStorage.setItem('eugestao_riscos', JSON.stringify(riscos));
             atualizarRiscos();
             showToast('Risco registrado!');
         }
@@ -1168,7 +1168,7 @@ Em Andamento: ${demandas.filter(d => d.status === 'andamento').length}
 Concluídas: ${demandas.filter(d => d.status === 'concluido').length}
 Riscos Identificados: ${riscos.length}
 
-Gerado por eu_ | TechProcess Master Agent
+Gerado por eu_gestão | TechProcess Master Agent
             `.trim();
 
             const blob = new Blob([report], { type: 'text/plain' });
