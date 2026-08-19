@@ -422,7 +422,7 @@
         /* Metrics */
         .metrics-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
@@ -673,6 +673,10 @@
                 <div class="metric-box">
                     <div class="metric-value" id="riscoAlto">0</div>
                     <div class="metric-label">Risco Alto</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value" id="totalAnotacoes">0</div>
+                    <div class="metric-label">Anotações</div>
                 </div>
             </div>
 
@@ -1188,6 +1192,7 @@
             document.getElementById('emAndamento').textContent = demandas.filter(d => d.status === 'andamento').length;
             document.getElementById('concluidas').textContent = demandas.filter(d => d.status === 'concluido').length;
             document.getElementById('riscoAlto').textContent = riscos.filter(r => r.nivel === 'alto').length;
+            document.getElementById('totalAnotacoes').textContent = anotacoes.length;
         }
 
         // Delete demand
@@ -1235,6 +1240,7 @@
             anotacoes.unshift(anotacao);
             localStorage.setItem('eugestao_anotacoes', JSON.stringify(anotacoes));
             atualizarTabelaAnotacoes();
+            atualizarMetricas();
             limparAnotacao();
             showToast('Anotação salva com sucesso!');
         }
@@ -1278,6 +1284,7 @@
                 anotacoes.splice(index, 1);
                 localStorage.setItem('eugestao_anotacoes', JSON.stringify(anotacoes));
                 atualizarTabelaAnotacoes();
+                atualizarMetricas();
                 showToast('Anotação excluída!');
             }
         }
