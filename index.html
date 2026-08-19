@@ -552,6 +552,7 @@
         <nav class="nav-tabs">
             <button class="nav-tab active" onclick="showPanel('dashboard')">DASHBOARD</button>
             <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
+            <button class="nav-tab" onclick="showPanel('anotacoes')">ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('cronograma')">CRONOGRAMA</button>
             <button class="nav-tab" onclick="showPanel('riscos')">RISCOS</button>
             <button class="nav-tab" onclick="showPanel('relatorios')">RELATÓRIOS</button>
@@ -694,6 +695,59 @@
                             <tbody id="corpoTabelaDemandas">
                                 <tr>
                                     <td colspan="6" style="text-align: center; color: #666;">Nenhuma demanda registrada</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anotações Panel -->
+        <div id="anotacoes" class="panel">
+            <div class="section-title">ANOTAÇÕES DIÁRIAS</div>
+            <div class="cards-grid">
+                <div class="tech-card">
+                    <div class="card-header">
+                        <div class="card-icon">📝</div>
+                        <div class="card-title">Nova Anotação</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-input" id="anotacaoData">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-input" id="anotacaoTitulo" placeholder="Ex: Reunião com cliente, ideia de melhoria...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Anotação</label>
+                        <textarea class="form-textarea" id="anotacaoTexto" placeholder="Descreva o que aconteceu, o que foi observado, ideias, pendências..."></textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="salvarAnotacao()">SALVAR ANOTAÇÃO</button>
+                        <button class="btn btn-secondary" onclick="limparAnotacao()">LIMPAR</button>
+                    </div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="card-header">
+                        <div class="card-icon">📋</div>
+                        <div class="card-title">Anotações Registradas</div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="tabelaAnotacoes">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Título</th>
+                                    <th>Anotação</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaAnotacoes">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: #666;">Nenhuma anotação registrada</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1060,6 +1114,84 @@
             document.getElementById('demandaSLA').placeholder = 'Selecione Complexidade e Prioridade';
         }
 
+        // --- ANOTAÇÕES ---
+        let anotacoes = JSON.parse(localStorage.getItem('eugestao_anotacoes') || '[]');
+
+        function salvarAnotacao() {
+            const data = document.getElementById('anotacaoData').value;
+            const titulo = document.getElementById('anotacaoTitulo').value;
+            const texto = document.getElementById('anotacaoTexto').value;
+
+            if (!titulo || !texto) {
+                showToast('Preencha o título e a anotação!');
+                return;
+            }
+
+            const anotacao = {
+                data: data || new Date().toISOString().split('T')[0],
+                titulo: titulo,
+                texto: texto,
+                dataCriacao: new Date().toISOString()
+            };
+
+            anotacoes.unshift(anotacao);
+            localStorage.setItem('eugestao_anotacoes', JSON.stringify(anotacoes));
+            atualizarTabelaAnotacoes();
+            limparAnotacao();
+            showToast('Anotação salva com sucesso!');
+        }
+
+        function atualizarTabelaAnotacoes() {
+            const tbody = document.getElementById('corpoTabelaAnotacoes');
+            if (anotacoes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">Nenhuma anotação registrada</td></tr>';
+                return;
+            }
+
+            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            tbody.innerHTML = anotacoes.map((a, i) => {
+                const d = new Date(a.data + 'T00:00:00');
+                const dataFormatada = `${d.getDate().toString().padStart(2,'0')}/${meses[d.getMonth()]}/${d.getFullYear()}`;
+                const textoResumido = a.texto.length > 80 ? a.texto.substring(0, 80) + '...' : a.texto;
+                return `
+                <tr>
+                    <td>${dataFormatada}</td>
+                    <td><strong>${a.titulo}</strong></td>
+                    <td title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="converterEmDemanda(${i})">TORNAR DEMANDA</button>
+                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="excluirAnotacao(${i})">EXCLUIR</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function excluirAnotacao(index) {
+            if (confirm('Excluir esta anotação?')) {
+                anotacoes.splice(index, 1);
+                localStorage.setItem('eugestao_anotacoes', JSON.stringify(anotacoes));
+                atualizarTabelaAnotacoes();
+                showToast('Anotação excluída!');
+            }
+        }
+
+        function converterEmDemanda(index) {
+            const a = anotacoes[index];
+            showPanel('demandas');
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-tab')[1].classList.add('active');
+            document.getElementById('demandaTitulo').value = a.titulo;
+            document.getElementById('demandaDescricao').value = a.texto;
+            showToast('Anotação carregada no formulário de demanda. Complete os campos restantes e salve.');
+        }
+
+        function limparAnotacao() {
+            ['anotacaoTitulo', 'anotacaoTexto'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
+        }
+
         // Save risk
         function salvarRisco() {
             const risco = {
@@ -1329,6 +1461,8 @@ Gerado por eu_gestão | TechProcess Master Agent
         atualizarTabelaDemandas();
         atualizarMetricas();
         atualizarRiscos();
+        atualizarTabelaAnotacoes();
+        document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
     </script>
 </body>
 </html>
