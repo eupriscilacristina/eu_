@@ -640,7 +640,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Complexidade</label>
-                        <select class="form-select" id="demandaComplexidade">
+                        <select class="form-select" id="demandaComplexidade" onchange="calcularSLA()">
                             <option value="">Selecione...</option>
                             <option value="baixa">Baixa</option>
                             <option value="media">Média</option>
@@ -650,13 +650,17 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Prioridade</label>
-                        <select class="form-select" id="demandaPrioridade">
+                        <select class="form-select" id="demandaPrioridade" onchange="calcularSLA()">
                             <option value="">Selecione...</option>
                             <option value="critica">Crítica</option>
                             <option value="alta">Alta</option>
                             <option value="media">Média</option>
                             <option value="baixa">Baixa</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SLA Automático (dias úteis)</label>
+                        <input type="text" class="form-input" id="demandaSLA" placeholder="Selecione Complexidade e Prioridade" readonly style="background: #1a1a2e; color: #00ff88; font-weight: bold; cursor: default;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Prazo Estimado (dias úteis)</label>
@@ -680,6 +684,8 @@
                                     <th>ID</th>
                                     <th>Título</th>
                                     <th>Complex.</th>
+                                    <th>Prior.</th>
+                                    <th>SLA</th>
                                     <th>Prazo</th>
                                     <th>Status</th>
                                     <th>Ações</th>
@@ -949,6 +955,29 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        // Calculate SLA automatically based on complexity x priority
+        function calcularSLA() {
+            const complexidade = document.getElementById('demandaComplexidade').value;
+            const prioridade = document.getElementById('demandaPrioridade').value;
+            const slaInput = document.getElementById('demandaSLA');
+
+            if (!complexidade || !prioridade) {
+                slaInput.value = '';
+                slaInput.placeholder = 'Selecione Complexidade e Prioridade';
+                return;
+            }
+
+            const matrizSLA = {
+                'baixa':     { 'critica': 2,  'alta': 3,  'media': 5,  'baixa': 10 },
+                'media':     { 'critica': 3,  'alta': 5,  'media': 7,  'baixa': 15 },
+                'alta':      { 'critica': 5,  'alta': 7,  'media': 10, 'baixa': 20 },
+                'inovadora': { 'critica': 7,  'alta': 10, 'media': 15, 'baixa': 30 }
+            };
+
+            const dias = matrizSLA[complexidade][prioridade];
+            slaInput.value = `${dias} dias úteis`;
+        }
+
         // Save demand
         function salvarDemanda() {
             const demanda = {
@@ -958,6 +987,7 @@
                 solicitante: document.getElementById('demandaSolicitante').value,
                 complexidade: document.getElementById('demandaComplexidade').value,
                 prioridade: document.getElementById('demandaPrioridade').value,
+                sla: document.getElementById('demandaSLA').value,
                 prazo: document.getElementById('demandaPrazo').value,
                 status: 'pendente',
                 dataCriacao: new Date().toISOString()
@@ -969,7 +999,7 @@
             }
 
             demandas.push(demanda);
-            localStorage.setItem('eu_demandas', JSON.stringify(demandas));
+            localStorage.setItem('eugestao_demandas', JSON.stringify(demandas));
             atualizarTabelaDemandas();
             atualizarMetricas();
             limparFormulario();
@@ -980,7 +1010,7 @@
         function atualizarTabelaDemandas() {
             const tbody = document.getElementById('corpoTabelaDemandas');
             if (demandas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">Nenhuma demanda registrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #666;">Nenhuma demanda registrada</td></tr>';
                 return;
             }
 
@@ -989,6 +1019,8 @@
                     <td><strong>${d.id}</strong></td>
                     <td>${d.titulo}</td>
                     <td>${d.complexidade || '-'}</td>
+                    <td>${d.prioridade || '-'}</td>
+                    <td style="color: #00ff88; font-weight: bold;">${d.sla || '-'}</td>
                     <td>${d.prazo || '-'} dias</td>
                     <td><span class="status-badge status-${d.status}">${d.status.toUpperCase()}</span></td>
                     <td>
@@ -1019,12 +1051,13 @@
 
         // Clear form
         function limparFormulario() {
-            ['demandaId', 'demandaTitulo', 'demandaDescricao', 'demandaSolicitante', 'demandaPrazo'].forEach(id => {
+            ['demandaId', 'demandaTitulo', 'demandaDescricao', 'demandaSolicitante', 'demandaPrazo', 'demandaSLA'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             ['demandaComplexidade', 'demandaPrioridade'].forEach(id => {
                 document.getElementById(id).selectedIndex = 0;
             });
+            document.getElementById('demandaSLA').placeholder = 'Selecione Complexidade e Prioridade';
         }
 
         // Save risk
