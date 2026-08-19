@@ -533,6 +533,99 @@
             color: #00ff88;
             font-size: 20px;
         }
+
+        /* Anotações Panel */
+        #anotacoes .cards-grid {
+            grid-template-columns: 1fr 1.5fr;
+        }
+
+        #anotacoes .tech-card {
+            background: linear-gradient(135deg, rgba(15, 15, 30, 0.95), rgba(20, 20, 45, 0.9));
+            border: 1px solid rgba(0, 240, 255, 0.25);
+        }
+
+        #anotacoes .tech-card::before {
+            background: linear-gradient(90deg, #00ff88, var(--primary), var(--secondary));
+            height: 3px;
+        }
+
+        #anotacoes .card-icon {
+            background: linear-gradient(135deg, #00ff88, var(--primary));
+        }
+
+        #anotacoes .data-table tbody tr {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        #anotacoes .data-table tbody tr:hover {
+            background: rgba(0, 255, 136, 0.06);
+            border-left: 3px solid #00ff88;
+        }
+
+        .anotacao-data-badge {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 240, 255, 0.1));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            min-width: 60px;
+        }
+
+        .anotacao-data-badge .dia {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #00ff88;
+            line-height: 1;
+        }
+
+        .anotacao-data-badge .mes-ano {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .anotacao-texto-preview {
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.5;
+            opacity: 0.85;
+            max-width: 350px;
+        }
+
+        .btn-tornar-demanda {
+            background: linear-gradient(135deg, #00ff88, #00cc6a) !important;
+            color: #000 !important;
+            font-weight: 700;
+            letter-spacing: 1px;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+
+        .btn-tornar-demanda:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            transform: scale(1.03);
+        }
+
+        .anotacao-count {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: var(--primary);
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+
+        /* Status badges extras */
+        .status-pendente { background: rgba(255, 200, 0, 0.2); color: #ffc800; border: 1px solid #ffc800; }
+        .status-andamento { background: rgba(0, 240, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+        .status-concluido { background: rgba(0, 255, 136, 0.2); color: #00ff88; border: 1px solid #00ff88; }
     </style>
 </head>
 <body>
@@ -734,6 +827,7 @@
                     <div class="card-header">
                         <div class="card-icon">📋</div>
                         <div class="card-title">Anotações Registradas</div>
+                        <span class="anotacao-count" id="anotacaoCount">0 anotações</span>
                     </div>
                     <div style="overflow-x: auto;">
                         <table class="data-table" id="tabelaAnotacoes">
@@ -1143,6 +1237,8 @@
 
         function atualizarTabelaAnotacoes() {
             const tbody = document.getElementById('corpoTabelaAnotacoes');
+            const counter = document.getElementById('anotacaoCount');
+            counter.textContent = `${anotacoes.length} anotaç${anotacoes.length === 1 ? 'ão' : 'ões'}`;
             if (anotacoes.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">Nenhuma anotação registrada</td></tr>';
                 return;
@@ -1151,16 +1247,23 @@
             const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
             tbody.innerHTML = anotacoes.map((a, i) => {
                 const d = new Date(a.data + 'T00:00:00');
-                const dataFormatada = `${d.getDate().toString().padStart(2,'0')}/${meses[d.getMonth()]}/${d.getFullYear()}`;
-                const textoResumido = a.texto.length > 80 ? a.texto.substring(0, 80) + '...' : a.texto;
+                const dia = d.getDate().toString().padStart(2,'0');
+                const mes = meses[d.getMonth()];
+                const ano = d.getFullYear();
+                const textoResumido = a.texto.length > 100 ? a.texto.substring(0, 100) + '...' : a.texto;
                 return `
                 <tr>
-                    <td>${dataFormatada}</td>
-                    <td><strong>${a.titulo}</strong></td>
-                    <td title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</td>
+                    <td>
+                        <div class="anotacao-data-badge">
+                            <span class="dia">${dia}</span>
+                            <span class="mes-ano">${mes} ${ano}</span>
+                        </div>
+                    </td>
+                    <td><strong style="color: var(--primary);">${a.titulo}</strong></td>
+                    <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
                     <td style="white-space: nowrap;">
-                        <button class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;" onclick="converterEmDemanda(${i})">TORNAR DEMANDA</button>
-                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="excluirAnotacao(${i})">EXCLUIR</button>
+                        <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="converterEmDemanda(${i})">TORNAR DEMANDA</button>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirAnotacao(${i})">EXCLUIR</button>
                     </td>
                 </tr>`;
             }).join('');
