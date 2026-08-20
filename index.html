@@ -630,6 +630,55 @@
         .status-pendente { background: rgba(255, 200, 0, 0.2); color: #ffc800; border: 1px solid #ffc800; }
         .status-andamento { background: rgba(0, 240, 255, 0.2); color: var(--primary); border: 1px solid var(--primary); }
         .status-concluido { background: rgba(0, 255, 136, 0.2); color: #00ff88; border: 1px solid #00ff88; }
+
+        /* Cronograma month groups */
+        .cronograma-mes-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(0, 240, 255, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 12px 20px;
+            margin-top: 20px;
+            margin-bottom: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .cronograma-mes-header:first-child {
+            margin-top: 0;
+        }
+
+        .cronograma-mes-header .mes-count {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 13px;
+            color: var(--secondary);
+            margin-left: 10px;
+        }
+
+        .cronograma-status-select {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--text);
+            padding: 6px 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .cronograma-status-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .cronograma-status-select option {
+            background: var(--bg-dark);
+        }
     </style>
 </head>
 <body>
@@ -648,8 +697,8 @@
 
         <nav class="nav-tabs">
             <button class="nav-tab active" onclick="showPanel('dashboard')">DASHBOARD</button>
-            <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
             <button class="nav-tab" onclick="showPanel('anotacoes')">ANOTAÇÕES</button>
+            <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
             <button class="nav-tab" onclick="showPanel('cronograma')">CRONOGRAMA</button>
             <button class="nav-tab" onclick="showPanel('riscos')">RISCOS</button>
             <button class="nav-tab" onclick="showPanel('relatorios')">RELATÓRIOS</button>
@@ -861,10 +910,22 @@
         <!-- Cronograma Panel -->
         <div id="cronograma" class="panel">
             <div class="section-title">CRONOGRAMA DE EXECUÇÃO</div>
+
+            <!-- Demandas agrupadas por mês -->
             <div class="tech-card" style="margin-bottom: 30px;">
                 <div class="card-header">
                     <div class="card-icon">📅</div>
-                    <div class="card-title">Planejamento de Fases</div>
+                    <div class="card-title">Demandas por Mês</div>
+                    <span class="anotacao-count" id="cronogramaCount">0 demandas</span>
+                </div>
+                <div id="cronogramaDemandas" style="overflow-x: auto;"></div>
+            </div>
+
+            <!-- Atividades adicionais persistidas -->
+            <div class="tech-card" style="margin-bottom: 30px;">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div class="card-title">Atividades Adicionais</div>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="data-table" id="tabelaCronograma">
@@ -877,34 +938,10 @@
                                 <th>Início</th>
                                 <th>Fim</th>
                                 <th>Status</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="corpoTabelaCronograma">
-                            <tr>
-                                <td><input type="text" placeholder="DEM-001"></td>
-                                <td><input type="text" placeholder="Nome da atividade"></td>
-                                <td><input type="text" placeholder="Responsável"></td>
-                                <td>
-                                    <select>
-                                        <option value="concepção">Concepção</option>
-                                        <option value="desenvolvimento">Desenvolvimento</option>
-                                        <option value="validação">Validação</option>
-                                        <option value="implantação">Implantação</option>
-                                    </select>
-                                </td>
-                                <td><input type="date"></td>
-                                <td><input type="date"></td>
-                                <td>
-                                    <select>
-                                        <option value="pendente">Pendente</option>
-                                        <option value="andamento">Em Andamento</option>
-                                        <option value="concluido">Concluído</option>
-                                        <option value="cancelada">Cancelada</option>
-                                        <option value="bloqueada">Bloqueada</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        </tbody>
+                        <tbody id="corpoTabelaCronograma"></tbody>
                     </table>
                 </div>
                 <div class="btn-group">
@@ -1094,6 +1131,8 @@
         // Data storage
         let demandas = JSON.parse(localStorage.getItem('eugestao_demandas') || '[]');
         let riscos = JSON.parse(localStorage.getItem('eugestao_riscos') || '[]');
+        let anotacoes = JSON.parse(localStorage.getItem('eugestao_anotacoes') || '[]');
+        let cronogramaAtividades = JSON.parse(localStorage.getItem('eugestao_cronograma') || '[]');
 
         // Navigation
         function showPanel(panelId) {
@@ -1101,6 +1140,7 @@
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(panelId).classList.add('active');
             event.target.classList.add('active');
+            if (panelId === 'cronograma') atualizarCronogramaDemandas();
         }
 
         // Toast notification
@@ -1178,12 +1218,27 @@
                     <td>${d.prioridade || '-'}</td>
                     <td style="color: #00ff88; font-weight: bold;">${d.sla || '-'}</td>
                     <td>${d.prazo || '-'} dias</td>
-                    <td><span class="status-badge status-${d.status}">${d.status.toUpperCase()}</span></td>
+                    <td>
+                        <select class="cronograma-status-select" onchange="mudarStatusDemanda(${i}, this.value)">
+                            <option value="pendente" ${d.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="andamento" ${d.status === 'andamento' ? 'selected' : ''}>Em Andamento</option>
+                            <option value="concluido" ${d.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+                        </select>
+                    </td>
                     <td>
                         <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="excluirDemanda(${i})">EXCLUIR</button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        // Change demand status
+        function mudarStatusDemanda(index, novoStatus) {
+            demandas[index].status = novoStatus;
+            localStorage.setItem('eugestao_demandas', JSON.stringify(demandas));
+            atualizarTabelaDemandas();
+            atualizarMetricas();
+            showToast(`Status alterado para "${novoStatus.toUpperCase()}"`);
         }
 
         // Update metrics
@@ -1199,7 +1254,7 @@
         function excluirDemanda(index) {
             if (confirm('Excluir esta demanda?')) {
                 demandas.splice(index, 1);
-            localStorage.setItem('eugestao_demandas', JSON.stringify(demandas));
+                localStorage.setItem('eugestao_demandas', JSON.stringify(demandas));
                 atualizarTabelaDemandas();
                 atualizarMetricas();
                 showToast('Demanda excluída!');
@@ -1218,8 +1273,6 @@
         }
 
         // --- ANOTAÇÕES ---
-        let anotacoes = JSON.parse(localStorage.getItem('eugestao_anotacoes') || '[]');
-
         function salvarAnotacao() {
             const data = document.getElementById('anotacaoData').value;
             const titulo = document.getElementById('anotacaoTitulo').value;
@@ -1254,8 +1307,10 @@
                 return;
             }
 
+            const sorted = [...anotacoes].map((a, i) => ({...a, _originalIndex: i})).sort((a, b) => new Date(b.data) - new Date(a.data));
+
             const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-            tbody.innerHTML = anotacoes.map((a, i) => {
+            tbody.innerHTML = sorted.map((a) => {
                 const d = new Date(a.data + 'T00:00:00');
                 const dia = d.getDate().toString().padStart(2,'0');
                 const mes = meses[d.getMonth()];
@@ -1272,8 +1327,8 @@
                     <td><strong style="color: var(--primary);">${a.titulo}</strong></td>
                     <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
                     <td style="white-space: nowrap;">
-                        <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="converterEmDemanda(${i})">TORNAR DEMANDA</button>
-                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirAnotacao(${i})">EXCLUIR</button>
+                        <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="converterEmDemanda(${a._originalIndex})">TORNAR DEMANDA</button>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirAnotacao(${a._originalIndex})">EXCLUIR</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -1291,9 +1346,10 @@
 
         function converterEmDemanda(index) {
             const a = anotacoes[index];
-            showPanel('demandas');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-tab')[1].classList.add('active');
+            document.getElementById('demandas').classList.add('active');
+            document.querySelectorAll('.nav-tab')[2].classList.add('active');
             document.getElementById('demandaTitulo').value = a.titulo;
             document.getElementById('demandaDescricao').value = a.texto;
             showToast('Anotação carregada no formulário de demanda. Complete os campos restantes e salve.');
@@ -1304,6 +1360,127 @@
                 document.getElementById(id).value = '';
             });
             document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
+        }
+
+        // --- CRONOGRAMA: Demandas agrupadas por mês ---
+        function atualizarCronogramaDemandas() {
+            const container = document.getElementById('cronogramaDemandas');
+            const counter = document.getElementById('cronogramaCount');
+            counter.textContent = `${demandas.length} demanda${demandas.length !== 1 ? 's' : ''}`;
+
+            if (demandas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 30px;">Nenhuma demanda registrada. Crie demandas no painel DEMANDAS.</p>';
+                return;
+            }
+
+            const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            const agrupado = {};
+
+            demandas.forEach((d, i) => {
+                const dt = new Date(d.dataCriacao);
+                const chave = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                if (!agrupado[chave]) agrupado[chave] = [];
+                agrupado[chave].push({...d, _index: i});
+            });
+
+            const chavesOrdenadas = Object.keys(agrupado).sort().reverse();
+
+            let html = '';
+            chavesOrdenadas.forEach(chave => {
+                const [ano, mes] = chave.split('-');
+                const lista = agrupado[chave];
+                const concluidas = lista.filter(d => d.status === 'concluido').length;
+                html += `<div class="cronograma-mes-header">${meses[parseInt(mes) - 1]} ${ano} <span class="mes-count">${lista.length} demanda${lista.length !== 1 ? 's' : ''} | ${concluidas} concluída${concluidas !== 1 ? 's' : ''}</span></div>`;
+                html += `<table class="data-table"><thead><tr><th>ID</th><th>Título</th><th>Prioridade</th><th>SLA</th><th>Prazo</th><th>Status</th></tr></thead><tbody>`;
+                lista.forEach(d => {
+                    html += `<tr>
+                        <td><strong>${d.id}</strong></td>
+                        <td>${d.titulo}</td>
+                        <td>${d.prioridade || '-'}</td>
+                        <td style="color: #00ff88; font-weight: bold;">${d.sla || '-'}</td>
+                        <td>${d.prazo || '-'} dias</td>
+                        <td>
+                            <select class="cronograma-status-select" onchange="mudarStatusDemanda(${d._index}, this.value)">
+                                <option value="pendente" ${d.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                                <option value="andamento" ${d.status === 'andamento' ? 'selected' : ''}>Em Andamento</option>
+                                <option value="concluido" ${d.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+                            </select>
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        // --- ATIVIDADES ADICIONAIS DO CRONOGRAMA (persistidas) ---
+        function adicionarLinhaCronograma() {
+            const atividade = {
+                demandaId: '',
+                titulo: '',
+                responsavel: '',
+                fase: 'concepção',
+                inicio: '',
+                fim: '',
+                status: 'pendente'
+            };
+            cronogramaAtividades.push(atividade);
+            localStorage.setItem('eugestao_cronograma', JSON.stringify(cronogramaAtividades));
+            atualizarTabelaAtividades();
+            showToast('Linha adicionada!');
+        }
+
+        function atualizarTabelaAtividades() {
+            const tbody = document.getElementById('corpoTabelaCronograma');
+            if (cronogramaAtividades.length === 0) {
+                tbody.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = cronogramaAtividades.map((a, i) => `
+                <tr>
+                    <td><input type="text" value="${a.demandaId}" placeholder="DEM-001" onchange="salvarAtividadeCronograma(${i}, 'demandaId', this.value)"></td>
+                    <td><input type="text" value="${a.titulo}" placeholder="Nome da atividade" onchange="salvarAtividadeCronograma(${i}, 'titulo', this.value)"></td>
+                    <td><input type="text" value="${a.responsavel}" placeholder="Responsável" onchange="salvarAtividadeCronograma(${i}, 'responsavel', this.value)"></td>
+                    <td>
+                        <select onchange="salvarAtividadeCronograma(${i}, 'fase', this.value)">
+                            <option value="concepção" ${a.fase === 'concepção' ? 'selected' : ''}>Concepção</option>
+                            <option value="desenvolvimento" ${a.fase === 'desenvolvimento' ? 'selected' : ''}>Desenvolvimento</option>
+                            <option value="validação" ${a.fase === 'validação' ? 'selected' : ''}>Validação</option>
+                            <option value="implantação" ${a.fase === 'implantação' ? 'selected' : ''}>Implantação</option>
+                        </select>
+                    </td>
+                    <td><input type="date" value="${a.inicio}" onchange="salvarAtividadeCronograma(${i}, 'inicio', this.value)"></td>
+                    <td><input type="date" value="${a.fim}" onchange="salvarAtividadeCronograma(${i}, 'fim', this.value)"></td>
+                    <td>
+                        <select onchange="salvarAtividadeCronograma(${i}, 'status', this.value)">
+                            <option value="pendente" ${a.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="andamento" ${a.status === 'andamento' ? 'selected' : ''}>Em Andamento</option>
+                            <option value="concluido" ${a.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+                            <option value="cancelada" ${a.status === 'cancelada' ? 'selected' : ''}>Cancelada</option>
+                            <option value="bloqueada" ${a.status === 'bloqueada' ? 'selected' : ''}>Bloqueada</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="excluirAtividadeCronograma(${i})">EXCLUIR</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function salvarAtividadeCronograma(index, campo, valor) {
+            cronogramaAtividades[index][campo] = valor;
+            localStorage.setItem('eugestao_cronograma', JSON.stringify(cronogramaAtividades));
+        }
+
+        function excluirAtividadeCronograma(index) {
+            if (confirm('Excluir esta atividade?')) {
+                cronogramaAtividades.splice(index, 1);
+                localStorage.setItem('eugestao_cronograma', JSON.stringify(cronogramaAtividades));
+                atualizarTabelaAtividades();
+                showToast('Atividade excluída!');
+            }
         }
 
         // Save risk
@@ -1353,37 +1530,6 @@
             `).join('');
 
             atualizarMetricas();
-        }
-
-        // Add cronograma row
-        function adicionarLinhaCronograma() {
-            const tbody = document.getElementById('corpoTabelaCronograma');
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td><input type="text" placeholder="DEM-001"></td>
-                <td><input type="text" placeholder="Nome da atividade"></td>
-                <td><input type="text" placeholder="Responsável"></td>
-                <td>
-                    <select>
-                        <option value="concepção">Concepção</option>
-                        <option value="desenvolvimento">Desenvolvimento</option>
-                        <option value="validação">Validação</option>
-                        <option value="implantação">Implantação</option>
-                    </select>
-                </td>
-                <td><input type="date"></td>
-                <td><input type="date"></td>
-                <td>
-                    <select>
-                        <option value="pendente">Pendente</option>
-                        <option value="andamento">Em Andamento</option>
-                        <option value="concluido">Concluído</option>
-                        <option value="cancelada">Cancelada</option>
-                        <option value="bloqueada">Bloqueada</option>
-                    </select>
-                </td>
-            `;
-            showToast('Linha adicionada!');
         }
 
         // Add Excel row
@@ -1490,18 +1636,15 @@ Gerado por eu_gestão | TechProcess Master Agent
 
         // Export cronograma
         function exportarCronograma() {
-            const table = document.getElementById('tabelaCronograma');
-            let csv = [];
-            const rows = table.querySelectorAll('tr');
+            let csv = ['Tipo;ID;Título/Atividade;Responsável;Fase;Início;Fim;Status'];
 
-            rows.forEach(row => {
-                const cols = row.querySelectorAll('td, th');
-                const rowData = [];
-                cols.forEach(col => {
-                    const input = col.querySelector('input, select');
-                    rowData.push(input ? input.value : col.textContent);
-                });
-                csv.push(rowData.join(';'));
+            demandas.forEach(d => {
+                const dt = new Date(d.dataCriacao);
+                csv.push(`Demanda;${d.id};${d.titulo};${d.solicitante || ''};-;-;-;${d.status}`);
+            });
+
+            cronogramaAtividades.forEach(a => {
+                csv.push(`Atividade;${a.demandaId};${a.titulo};${a.responsavel};${a.fase};${a.inicio};${a.fim};${a.status}`);
             });
 
             const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
@@ -1576,6 +1719,7 @@ Gerado por eu_gestão | TechProcess Master Agent
         atualizarMetricas();
         atualizarRiscos();
         atualizarTabelaAnotacoes();
+        atualizarTabelaAtividades();
         document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
     </script>
 </body>
