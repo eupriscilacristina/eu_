@@ -1132,31 +1132,30 @@
         }
 
         // === Sync helpers ===
+        let migrando = { demandas: false, riscos: false, anotacoes: false };
+
         function carregarDados(chave, callback) {
             if (useFirebase) {
+                // Primeiro carrega do localStorage imediatamente
+                const local = JSON.parse(localStorage.getItem('eugestao_' + chave) || '[]');
+                if (local.length > 0) callback(local);
+
+                // Depois busca do Firebase
                 db.ref(chave).once('value').then(snap => {
                     const dados = snap.val();
                     if (dados) {
                         const arr = Object.keys(dados).sort().map(k => dados[k]);
                         callback(arr);
-                    } else {
-                        // Firebase vazio - migrar do localStorage
-                        const local = JSON.parse(localStorage.getItem('eugestao_' + chave) || '[]');
-                        if (local.length > 0) {
-                            const obj = {};
-                            local.forEach((d, i) => obj[i] = d);
-                            db.ref(chave).set(obj).then(() => callback(local));
-                        } else {
-                            callback([]);
-                        }
-                    }
-                });
-                // Listener em tempo real para mudanças
-                db.ref(chave).on('value', snap => {
-                    const dados = snap.val();
-                    if (dados) {
-                        const arr = Object.keys(dados).sort().map(k => dados[k]);
-                        callback(arr);
+                        // Atualiza localStorage com dados do Firebase
+                        localStorage.setItem('eugestao_' + chave, JSON.stringify(arr));
+                    } else if (local.length > 0) {
+                        // Firebase vazio, migra do localStorage
+                        migrando[chave] = true;
+                        const obj = {};
+                        local.forEach((d, i) => obj[i] = d);
+                        db.ref(chave).set(obj).then(() => {
+                            migrando[chave] = false;
+                        });
                     }
                 });
             } else {
@@ -1165,12 +1164,11 @@
         }
 
         function salvarDados(chave, dados) {
-            if (useFirebase) {
+            if (useFirebase && !migrando[chave]) {
                 const obj = {};
                 dados.forEach((d, i) => obj[i] = d);
                 db.ref(chave).set(obj);
             }
-            // Sempre salva no localStorage como backup
             localStorage.setItem('eugestao_' + chave, JSON.stringify(dados));
         }
 
