@@ -1134,9 +1134,30 @@
         // === Sync helpers ===
         function carregarDados(chave, callback) {
             if (useFirebase) {
+                db.ref(chave).once('value').then(snap => {
+                    const dados = snap.val();
+                    if (dados) {
+                        const arr = Object.keys(dados).sort().map(k => dados[k]);
+                        callback(arr);
+                    } else {
+                        // Firebase vazio - migrar do localStorage
+                        const local = JSON.parse(localStorage.getItem('eugestao_' + chave) || '[]');
+                        if (local.length > 0) {
+                            const obj = {};
+                            local.forEach((d, i) => obj[i] = d);
+                            db.ref(chave).set(obj).then(() => callback(local));
+                        } else {
+                            callback([]);
+                        }
+                    }
+                });
+                // Listener em tempo real para mudanças
                 db.ref(chave).on('value', snap => {
                     const dados = snap.val();
-                    callback(dados ? Object.values(dados) : []);
+                    if (dados) {
+                        const arr = Object.keys(dados).sort().map(k => dados[k]);
+                        callback(arr);
+                    }
                 });
             } else {
                 callback(JSON.parse(localStorage.getItem('eugestao_' + chave) || '[]'));
@@ -1148,9 +1169,9 @@
                 const obj = {};
                 dados.forEach((d, i) => obj[i] = d);
                 db.ref(chave).set(obj);
-            } else {
-                localStorage.setItem('eugestao_' + chave, JSON.stringify(dados));
             }
+            // Sempre salva no localStorage como backup
+            localStorage.setItem('eugestao_' + chave, JSON.stringify(dados));
         }
 
         function removerDado(chave, dados) {
