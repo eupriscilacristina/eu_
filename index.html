@@ -681,6 +681,34 @@
         .cronograma-status-select option {
             background: var(--bg-dark);
         }
+
+        /* Controle Anotações */
+        #controleAnotacoes .tech-card {
+            background: linear-gradient(135deg, rgba(15, 15, 30, 0.95), rgba(20, 20, 45, 0.9));
+            border: 2px solid rgba(255, 200, 0, 0.35);
+        }
+
+        #controleAnotacoes .tech-card::before {
+            background: linear-gradient(90deg, #ffc800, var(--primary), var(--secondary));
+            height: 4px;
+        }
+
+        #controleAnotacoes .card-icon {
+            background: linear-gradient(135deg, #ffc800, #ff8800);
+        }
+
+        .btn-arquivar {
+            background: linear-gradient(135deg, #ffc800, #ff8800) !important;
+            color: #000 !important;
+            font-weight: 700;
+            letter-spacing: 1px;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+
+        .btn-arquivar:hover {
+            box-shadow: 0 0 20px rgba(255, 200, 0, 0.5);
+            transform: scale(1.03);
+        }
     </style>
 </head>
 <body>
@@ -702,6 +730,7 @@
             <button class="nav-tab" onclick="showPanel('anotacoes')">ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
             <button class="nav-tab" onclick="showPanel('cronograma')">CRONOGRAMA</button>
+            <button class="nav-tab" onclick="showPanel('controleAnotacoes')">CONTROLE ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('riscos')">RISCOS</button>
             <button class="nav-tab" onclick="showPanel('relatorios')">RELATÓRIOS</button>
         </nav>
@@ -925,6 +954,36 @@
 
             <div class="btn-group" style="margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="exportarCronograma()">EXPORTAR CRONOGRAMA</button>
+            </div>
+        </div>
+
+        <!-- Controle Anotações Panel -->
+        <div id="controleAnotacoes" class="panel">
+            <div class="section-title">CONTROLE DE ANOTAÇÕES</div>
+            <div class="tech-card">
+                <div class="card-header">
+                    <div class="card-icon">📦</div>
+                    <div class="card-title">Anotações Arquivadas</div>
+                    <span class="anotacao-count" id="arquivoCount">0 arquivadas</span>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="tabelaArquivo">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Título</th>
+                                <th>Anotação</th>
+                                <th>Data Arquivo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaArquivo">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #666;">Nenhuma anotação arquivada</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -1180,6 +1239,7 @@
         let demandas = [];
         let riscos = [];
         let anotacoes = [];
+        let anotacoesArquivo = [];
 
         // Navigation
         function showPanel(panelId) {
@@ -1423,6 +1483,7 @@
                     <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
                     <td style="white-space: nowrap;">
                         <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="converterEmDemanda(${a._originalIndex})">TORNAR DEMANDA</button>
+                        <button class="btn btn-arquivar" style="padding: 5px 10px; font-size: 11px;" onclick="arquivarAnotacao(${a._originalIndex})">ARQUIVAR</button>
                         <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirAnotacao(${a._originalIndex})">EXCLUIR</button>
                     </td>
                 </tr>`;
@@ -1455,6 +1516,77 @@
                 document.getElementById(id).value = '';
             });
             document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
+        }
+
+        // --- ARQUIVO DE ANOTAÇÕES ---
+        function arquivarAnotacao(index) {
+            if (!confirm('Arquivar esta anotação?')) return;
+            const anotacao = anotacoes.splice(index, 1)[0];
+            anotacao.dataArquivo = new Date().toISOString();
+            anotacoesArquivo.unshift(anotacao);
+            salvarDados('anotacoes', anotacoes);
+            salvarDados('anotacoesArquivo', anotacoesArquivo);
+            atualizarTabelaAnotacoes();
+            atualizarMetricas();
+            showToast('Anotação arquivada!');
+        }
+
+        function restaurarAnotacao(index) {
+            const anotacao = anotacoesArquivo.splice(index, 1)[0];
+            delete anotacao.dataArquivo;
+            anotacoes.unshift(anotacao);
+            salvarDados('anotacoesArquivo', anotacoesArquivo);
+            salvarDados('anotacoes', anotacoes);
+            atualizarTabelaArquivo();
+            atualizarTabelaAnotacoes();
+            atualizarMetricas();
+            showToast('Anotação restaurada!');
+        }
+
+        function excluirDoArquivo(index) {
+            if (!confirm('Excluir permanentemente esta anotação?')) return;
+            anotacoesArquivo.splice(index, 1);
+            salvarDados('anotacoesArquivo', anotacoesArquivo);
+            atualizarTabelaArquivo();
+            showToast('Anotação excluída do arquivo!');
+        }
+
+        function atualizarTabelaArquivo() {
+            const tbody = document.getElementById('corpoTabelaArquivo');
+            const counter = document.getElementById('arquivoCount');
+            counter.textContent = `${anotacoesArquivo.length} arquivad${anotacoesArquivo.length === 1 ? 'a' : 'as'}`;
+            if (anotacoesArquivo.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">Nenhuma anotação arquivada</td></tr>';
+                return;
+            }
+
+            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            const sorted = [...anotacoesArquivo].map((a, i) => ({...a, _idx: i})).sort((a, b) => new Date(b.dataArquivo) - new Date(a.dataArquivo));
+
+            tbody.innerHTML = sorted.map(a => {
+                const d = new Date(a.data + 'T00:00:00');
+                const dia = d.getDate().toString().padStart(2,'0');
+                const mes = meses[d.getMonth()];
+                const ano = d.getFullYear();
+                const textoResumido = a.texto.length > 100 ? a.texto.substring(0, 100) + '...' : a.texto;
+                const dataArq = new Date(a.dataArquivo).toLocaleDateString('pt-BR');
+                return `
+                <tr>
+                    <td>
+                        <div class="anotacao-data-badge">
+                            <span class="dia">${dia}</span>
+                            <span class="mes-ano">${mes} ${ano}</span>
+                        </div>
+                    </td>
+                    <td><strong style="color: #ffc800;">${a.titulo}</strong></td>
+                    <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
+                    <td style="font-family: 'Share Tech Mono', monospace; font-size: 13px; color: #999;">${dataArq}</td>
+                    <td style="white-space: nowrap;">
+                        <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="restaurarAnotacao(${a._idx})">RESTAURAR</button>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirDoArquivo(${a._idx})">EXCLUIR</button>
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
         // --- CRONOGRAMA: Demandas agrupadas por mês ---
@@ -1749,6 +1881,7 @@ Gerado por eu_gestão | TechProcess Master Agent
         carregarDados('demandas', dados => { demandas = dados; atualizarTabelaDemandas(); atualizarMetricas(); atualizarSelectDemandasRiscos(); });
         carregarDados('riscos', dados => { riscos = dados; atualizarRiscos(); });
         carregarDados('anotacoes', dados => { anotacoes = dados; atualizarTabelaAnotacoes(); atualizarMetricas(); });
+        carregarDados('anotacoesArquivo', dados => { anotacoesArquivo = dados; atualizarTabelaArquivo(); });
         document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
     </script>
 </body>
