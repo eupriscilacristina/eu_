@@ -1197,8 +1197,8 @@
                     <td>${d.prazo || '-'} dias</td>
                     <td><span class="status-badge status-${d.status}">${d.status.toUpperCase()}</span></td>
                     <td>
-                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="editarDemanda(${i})">EDITAR</button>
-                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="excluirDemanda(${i})">EXCLUIR</button>
+                        <button style="background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid #00f0ff; padding: 4px 8px; font-size: 11px; font-family: 'Rajdhani', sans-serif; font-weight: 600; cursor: pointer; text-transform: uppercase; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 0 12px rgba(0,240,255,0.4)'" onmouseout="this.style.boxShadow='none'" onclick="editarDemanda(${i})">EDITAR</button>
+                        <button style="background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid #00f0ff; padding: 4px 8px; font-size: 11px; font-family: 'Rajdhani', sans-serif; font-weight: 600; cursor: pointer; text-transform: uppercase; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 0 12px rgba(0,240,255,0.4)'" onmouseout="this.style.boxShadow='none'" onclick="excluirDemanda(${i})">EXCLUIR</button>
                     </td>
                 </tr>
             `).join('');
