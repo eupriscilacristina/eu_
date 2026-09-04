@@ -785,9 +785,9 @@
         <nav class="nav-tabs">
             <button class="nav-tab active" onclick="showPanel('dashboard')">DASHBOARD</button>
             <button class="nav-tab" onclick="showPanel('anotacoes')">ANOTAÇÕES</button>
+            <button class="nav-tab" onclick="showPanel('controleAnotacoes')">CONTROLE ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
             <button class="nav-tab" onclick="showPanel('cronograma')">CRONOGRAMA</button>
-            <button class="nav-tab" onclick="showPanel('controleAnotacoes')">CONTROLE ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('riscos')">RISCOS</button>
             <button class="nav-tab" onclick="showPanel('relatorios')">RELATÓRIOS</button>
         </nav>
@@ -1680,7 +1680,7 @@
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('demandas').classList.add('active');
-            document.querySelectorAll('.nav-tab')[2].classList.add('active');
+            document.querySelectorAll('.nav-tab')[3].classList.add('active');
             document.getElementById('demandaTitulo').value = a.titulo;
             document.getElementById('demandaDescricao').value = a.texto;
             showToast('Anotação carregada no formulário de demanda. Complete os campos restantes e salve.');
