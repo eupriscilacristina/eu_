@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary: #00f0ff;
@@ -371,54 +372,41 @@
         .status-done { background: rgba(0, 255, 136, 0.2); color: #00ff88; border: 1px solid #00ff88; }
         .status-risk { background: rgba(255, 0, 170, 0.2); color: var(--accent); border: 1px solid var(--accent); }
 
-        /* Timeline */
-        .timeline {
-            position: relative;
-            padding-left: 40px;
+        /* Chart */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
         }
 
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(180deg, var(--primary), var(--secondary), var(--accent));
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 30px;
+        .chart-box {
             background: var(--bg-card);
-            border: 2px solid rgba(0, 240, 255, 0.3);
+            border: 2px solid rgba(0, 240, 255, 0.35);
             padding: 25px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .timeline-item::before {
+        .chart-box::after {
             content: '';
             position: absolute;
-            left: -33px;
-            top: 25px;
-            width: 12px;
-            height: 12px;
-            background: var(--primary);
-            border-radius: 50%;
-            box-shadow: var(--glow);
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
         }
 
-        .timeline-phase {
+        .chart-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--secondary);
-            margin-bottom: 8px;
+            font-size: 15px;
+            letter-spacing: 1px;
+            color: var(--primary);
+            margin-bottom: 15px;
         }
 
-        .timeline-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 10px;
+        .chart-box canvas {
+            max-height: 300px;
         }
 
         /* Metrics */
@@ -760,37 +748,19 @@
                 </div>
             </div>
 
-            <div class="section-title">FRAMEWORK DE TRABALHO</div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-phase">FASE 01</div>
-                    <div class="timeline-title">Visão Geral e Escopo</div>
-                    <p>Resumo executivo e critérios de aceite para cada demanda. Definition of Done claro e mensurável.</p>
+            <div class="section-title">GRÁFICOS</div>
+            <div class="charts-row">
+                <div class="chart-box">
+                    <div class="chart-title">Demandas por Status</div>
+                    <canvas id="chartStatus"></canvas>
                 </div>
-                <div class="timeline-item">
-                    <div class="timeline-phase">FASE 02</div>
-                    <div class="timeline-title">Cronograma de Execução</div>
-                    <p>Concepção → Desenvolvimento → Validação → Implantação. Marcos cronológicos claros.</p>
+                <div class="chart-box">
+                    <div class="chart-title">Demandas por Complexidade</div>
+                    <canvas id="chartComplexidade"></canvas>
                 </div>
-                <div class="timeline-item">
-                    <div class="timeline-phase">FASE 03</div>
-                    <div class="timeline-title">Estimativa de Prazos</div>
-                    <p>Análise de complexidade (Baixa/Média/Alta/Inovadora) com margem de segurança corporativa.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-phase">FASE 04</div>
-                    <div class="timeline-title">Análise de Riscos</div>
-                    <p>Identificação de gargalos e planos de contingência. O que pode dar errado e como reconstruir.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-phase">FASE 05</div>
-                    <div class="timeline-title">Impacto Multi-Área</div>
-                    <p>Avaliação sistêmica: Tecnologia, Operações, Suporte e Visão Estratégica da Diretoria.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-phase">FASE 06</div>
-                    <div class="timeline-title">Relatórios Executivos</div>
-                    <p>Conteúdo pronto para exportação Word/Excel. Formato tabular e sumário executivo.</p>
+                <div class="chart-box">
+                    <div class="chart-title">Riscos por Nível</div>
+                    <canvas id="chartRiscos"></canvas>
                 </div>
             </div>
         </div>
@@ -1352,6 +1322,125 @@
             document.getElementById('concluidas').textContent = demandas.filter(d => d.status === 'concluido').length;
             document.getElementById('riscoAlto').textContent = riscos.filter(r => r.nivel === 'alto').length;
             document.getElementById('totalAnotacoes').textContent = anotacoes.length;
+            atualizarGraficos();
+        }
+
+        // Charts
+        const chartStatusRef = document.getElementById('chartStatus');
+        const chartComplexidadeRef = document.getElementById('chartComplexidade');
+        const chartRiscosRef = document.getElementById('chartRiscos');
+        let chartStatus = null;
+        let chartComplexidade = null;
+        let chartRiscos = null;
+
+        const CORES_STATUS = ['#ff00aa', '#00f0ff', '#00ff88', '#ffa500'];
+        const CORES_COMPLEXIDADE = ['#00ff88', '#00f0ff', '#7b2fff', '#ff00aa'];
+        const CORES_RISCO = ['#ff00aa', '#ffa500', '#00f0ff'];
+
+        function criarGraficos() {
+            if (typeof Chart === 'undefined') return;
+            Chart.defaults.color = '#e0e0e0';
+            Chart.defaults.borderColor = 'rgba(0, 240, 255, 0.15)';
+            Chart.defaults.font.family = 'Rajdhani';
+            Chart.defaults.font.size = 13;
+
+            chartStatus = new Chart(chartStatusRef, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pendente', 'Em Andamento', 'Concluída', 'Atrasada'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: CORES_STATUS,
+                        borderColor: '#0a0a12',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 15 } }
+                    }
+                }
+            });
+
+            chartComplexidade = new Chart(chartComplexidadeRef, {
+                type: 'bar',
+                data: {
+                    labels: ['Baixa', 'Média', 'Alta', 'Inovadora'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: CORES_COMPLEXIDADE,
+                        borderColor: 'rgba(0, 240, 255, 0.6)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+
+            chartRiscos = new Chart(chartRiscosRef, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Alto', 'Médio', 'Baixo'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: CORES_RISCO,
+                        borderColor: '#0a0a12',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 15 } }
+                    }
+                }
+            });
+        }
+
+        function atualizarGraficos() {
+            if (typeof Chart === 'undefined') return;
+            if (!chartStatus) criarGraficos();
+
+            chartStatus.data.datasets[0].data = [
+                demandas.filter(d => d.status === 'pendente').length,
+                demandas.filter(d => d.status === 'andamento').length,
+                demandas.filter(d => d.status === 'concluido').length,
+                demandas.filter(d => d.status === 'atrasado').length
+            ];
+
+            chartComplexidade.data.datasets[0].data = [
+                demandas.filter(d => d.complexidade === 'baixa').length,
+                demandas.filter(d => d.complexidade === 'media').length,
+                demandas.filter(d => d.complexidade === 'alta').length,
+                demandas.filter(d => d.complexidade === 'inovadora').length
+            ];
+
+            chartRiscos.data.datasets[0].data = [
+                riscos.filter(r => r.nivel === 'alto').length,
+                riscos.filter(r => r.nivel === 'medio').length,
+                riscos.filter(r => r.nivel === 'baixo').length
+            ];
+
+            chartStatus.update();
+            chartComplexidade.update();
+            chartRiscos.update();
         }
 
         // Delete demand
