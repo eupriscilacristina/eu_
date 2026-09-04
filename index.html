@@ -605,6 +605,19 @@
             transform: scale(1.03);
         }
 
+        .btn-editar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+            color: #000 !important;
+            font-weight: 700;
+            letter-spacing: 1px;
+            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+        }
+
+        .btn-editar:hover {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            transform: scale(1.03);
+        }
+
         .anotacao-count {
             font-family: 'Share Tech Mono', monospace;
             font-size: 14px;
@@ -1527,19 +1540,41 @@
                 return;
             }
 
+            const isEdicao = editandoAnotacaoIndex !== null;
+
             const anotacao = {
                 data: data || new Date().toISOString().split('T')[0],
                 titulo: titulo,
                 texto: texto,
-                dataCriacao: new Date().toISOString()
+                dataCriacao: isEdicao ? anotacoes[editandoAnotacaoIndex].dataCriacao : new Date().toISOString()
             };
 
-            anotacoes.unshift(anotacao);
+            if (isEdicao) {
+                anotacoes[editandoAnotacaoIndex] = anotacao;
+            } else {
+                anotacoes.unshift(anotacao);
+            }
+
             salvarDados('anotacoes', anotacoes);
             atualizarTabelaAnotacoes();
             atualizarMetricas();
             limparAnotacao();
-            showToast('Anotação salva com sucesso!');
+            showToast(isEdicao ? 'Anotação atualizada com sucesso!' : 'Anotação salva com sucesso!');
+        }
+
+        // Edit annotation
+        let editandoAnotacaoIndex = null;
+
+        function editarAnotacao(index) {
+            const a = anotacoes[index];
+            editandoAnotacaoIndex = index;
+            document.getElementById('anotacaoData').value = a.data;
+            document.getElementById('anotacaoTitulo').value = a.titulo;
+            document.getElementById('anotacaoTexto').value = a.texto;
+            document.querySelector('#anotacoes .btn-primary').textContent = 'SALVAR EDIÇÃO';
+            document.querySelector('#anotacoes .btn-primary').onclick = salvarAnotacao;
+            document.querySelector('#anotacoes .btn-primary').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast('Editando anotação. Altere os campos e clique em SALVAR EDIÇÃO.');
         }
 
         function atualizarTabelaAnotacoes() {
@@ -1571,6 +1606,7 @@
                     <td><strong style="color: var(--primary);">${a.titulo}</strong></td>
                     <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
                     <td style="white-space: nowrap;">
+                        <button class="btn btn-editar" style="padding: 5px 10px; font-size: 11px;" onclick="editarAnotacao(${a._originalIndex})">EDITAR</button>
                         <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="converterEmDemanda(${a._originalIndex})">TORNAR DEMANDA</button>
                         <button class="btn btn-arquivar" style="padding: 5px 10px; font-size: 11px;" onclick="arquivarAnotacao(${a._originalIndex})">ARQUIVAR</button>
                         <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirAnotacao(${a._originalIndex})">EXCLUIR</button>
@@ -1605,6 +1641,9 @@
                 document.getElementById(id).value = '';
             });
             document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
+            editandoAnotacaoIndex = null;
+            document.querySelector('#anotacoes .btn-primary').textContent = 'SALVAR ANOTAÇÃO';
+            document.querySelector('#anotacoes .btn-primary').onclick = salvarAnotacao;
         }
 
         // --- ARQUIVO DE ANOTAÇÕES ---
