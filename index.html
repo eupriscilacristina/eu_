@@ -131,6 +131,28 @@
             gap: 40px;
         }
 
+        #demandas .tech-card:first-child .card-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #demandas .card-toggle {
+            margin-left: auto;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 16px;
+            color: var(--primary);
+            transition: transform 0.3s ease;
+        }
+
+        #demandas .tech-card:first-child.collapsed .card-toggle {
+            transform: rotate(-90deg);
+        }
+
+        #demandas .card-body {
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+
         #demandas .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -839,10 +861,12 @@
             <div class="section-title">CADASTRO DE DEMANDAS</div>
             <div class="cards-grid">
                 <div class="tech-card">
-                    <div class="card-header">
+                    <div class="card-header" onclick="alternarCadastroDemanda(this)">
                         <div class="card-icon">➕</div>
                         <div class="card-title">Nova Demanda</div>
+                        <span class="card-toggle">▼</span>
                     </div>
+                    <div class="card-body">
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">ID da Demanda</label>
@@ -888,6 +912,7 @@
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="salvarDemanda()">SALVAR DEMANDA</button>
                         <button class="btn btn-secondary" onclick="limparFormulario()">LIMPAR</button>
+                    </div>
                     </div>
                 </div>
 
@@ -1533,6 +1558,12 @@
             document.getElementById('demandaComplexidade').value = d.complexidade;
             document.getElementById('demandaPrioridade').value = d.prioridade;
             calcularSLA();
+            const cardDemanda = document.querySelector('#demandas .tech-card');
+            const bodyDemanda = cardDemanda.querySelector('.card-body');
+            if (cardDemanda.classList.contains('collapsed')) {
+                cardDemanda.classList.remove('collapsed');
+                bodyDemanda.style.maxHeight = bodyDemanda.scrollHeight + 'px';
+            }
             document.querySelector('#demandas .btn-primary').textContent = 'SALVAR EDIÇÃO';
             document.querySelector('#demandas .btn-primary').onclick = salvarEdicaoDemanda;
             showToast('Editando demanda ' + d.id + '. Altere os campos e salve.');
@@ -1577,6 +1608,14 @@
             editandoDemandaIndex = null;
             document.querySelector('#demandas .btn-primary').textContent = 'SALVAR DEMANDA';
             document.querySelector('#demandas .btn-primary').onclick = salvarDemanda;
+        }
+
+        // Toggle novo cadastro (abrir/fechar)
+        function alternarCadastroDemanda(headerEl) {
+            const card = headerEl.parentElement;
+            const body = card.querySelector('.card-body');
+            const isCollapsed = card.classList.toggle('collapsed');
+            body.style.maxHeight = isCollapsed ? '0px' : body.scrollHeight + 'px';
         }
 
         // --- ANOTAÇÕES ---
