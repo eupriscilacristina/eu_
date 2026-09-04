@@ -810,7 +810,6 @@
             <button class="nav-tab" onclick="showPanel('controleAnotacoes')">CONTROLE ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
             <button class="nav-tab" onclick="showPanel('cronograma')">CRONOGRAMA</button>
-            <button class="nav-tab" onclick="showPanel('riscos')">RISCOS</button>
             <button class="nav-tab" onclick="showPanel('relatorios')">RELATÓRIOS</button>
         </nav>
 
@@ -830,10 +829,6 @@
                     <div class="metric-label">Concluídas</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-value" id="riscoAlto">0</div>
-                    <div class="metric-label">Risco Alto</div>
-                </div>
-                <div class="metric-box">
                     <div class="metric-value" id="totalAnotacoes">0</div>
                     <div class="metric-label">Anotações</div>
                 </div>
@@ -848,10 +843,6 @@
                 <div class="chart-box">
                     <div class="chart-title">Demandas por Complexidade</div>
                     <canvas id="chartComplexidade"></canvas>
-                </div>
-                <div class="chart-box">
-                    <div class="chart-title">Riscos por Nível</div>
-                    <canvas id="chartRiscos"></canvas>
                 </div>
             </div>
         </div>
@@ -1044,91 +1035,6 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Riscos Panel -->
-        <div id="riscos" class="panel">
-            <div class="section-title">MATRIZ DE RISCOS</div>
-            <div class="cards-grid">
-                <div class="tech-card">
-                    <div class="card-header">
-                        <div class="card-icon">⚠️</div>
-                        <div class="card-title">Registrar Risco</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Demanda Relacionada</label>
-                        <select class="form-select" id="riscoDemandaId">
-                            <option value="">Selecione a demanda...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Descrição do Risco</label>
-                        <textarea class="form-textarea" id="riscoDescricao" placeholder="Descreva o risco identificado..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Probabilidade</label>
-                        <select class="form-select" id="riscoProbabilidade">
-                            <option value="">Selecione...</option>
-                            <option value="alta">Alta</option>
-                            <option value="media">Média</option>
-                            <option value="baixa">Baixa</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Impacto</label>
-                        <select class="form-select" id="riscoImpacto">
-                            <option value="">Selecione...</option>
-                            <option value="alto">Alto</option>
-                            <option value="medio">Médio</option>
-                            <option value="baixo">Baixo</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Plano de Contingência</label>
-                        <textarea class="form-textarea" id="riscoContingencia" placeholder="O que fazer se este risco se materializar?"></textarea>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="salvarRisco()">SALVAR RISCO</button>
-                    </div>
-                </div>
-
-                <div class="tech-card">
-                    <div class="card-header">
-                        <div class="card-icon">📊</div>
-                        <div class="card-title">Riscos Identificados</div>
-                    </div>
-                    <div class="risk-matrix" id="matrizRiscos">
-                        <div class="risk-cell risk-high">
-                            <strong>ALTO</strong><br>
-                            <span id="riscoAltoCount">0</span> riscos
-                        </div>
-                        <div class="risk-cell risk-medium">
-                            <strong>MÉDIO</strong><br>
-                            <span id="riscoMedioCount">0</span> riscos
-                        </div>
-                        <div class="risk-cell risk-low">
-                            <strong>BAIXO</strong><br>
-                            <span id="riscoBaixoCount">0</span> riscos
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px; max-height: 300px; overflow-y: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Demanda</th>
-                                    <th>Risco</th>
-                                    <th>Nível</th>
-                                </tr>
-                            </thead>
-                            <tbody id="listaRiscos">
-                                <tr>
-                                    <td colspan="3" style="text-align: center; color: #666;">Nenhum risco registrado</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1366,7 +1272,6 @@
             salvarDados('demandas', demandas);
             atualizarTabelaDemandas();
             atualizarMetricas();
-            atualizarSelectDemandasRiscos();
             limparFormulario();
             showToast('Demanda salva com sucesso!');
         }
@@ -1401,7 +1306,6 @@
             salvarDados('demandas', demandas);
             atualizarTabelaDemandas();
             atualizarMetricas();
-            atualizarSelectDemandasRiscos();
             showToast(`Status alterado para "${novoStatus.toUpperCase()}"`);
         }
 
@@ -1410,7 +1314,6 @@
             document.getElementById('totalDemandas').textContent = demandas.length;
             document.getElementById('emAndamento').textContent = demandas.filter(d => d.status === 'andamento').length;
             document.getElementById('concluidas').textContent = demandas.filter(d => d.status === 'concluido').length;
-            document.getElementById('riscoAlto').textContent = riscos.filter(r => r.nivel === 'alto').length;
             document.getElementById('totalAnotacoes').textContent = anotacoes.length;
             atualizarGraficos();
         }
@@ -1418,14 +1321,11 @@
         // Charts
         const chartStatusRef = document.getElementById('chartStatus');
         const chartComplexidadeRef = document.getElementById('chartComplexidade');
-        const chartRiscosRef = document.getElementById('chartRiscos');
         let chartStatus = null;
         let chartComplexidade = null;
-        let chartRiscos = null;
 
         const CORES_STATUS = ['#ff00aa', '#00f0ff', '#00ff88', '#ffa500'];
         const CORES_COMPLEXIDADE = ['#00ff88', '#00f0ff', '#7b2fff', '#ff00aa'];
-        const CORES_RISCO = ['#ff00aa', '#ffa500', '#00f0ff'];
 
         function criarGraficos() {
             if (typeof Chart === 'undefined') return;
@@ -1481,27 +1381,6 @@
                     }
                 }
             });
-
-            chartRiscos = new Chart(chartRiscosRef, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Alto', 'Médio', 'Baixo'],
-                    datasets: [{
-                        data: [0, 0, 0],
-                        backgroundColor: CORES_RISCO,
-                        borderColor: '#0a0a12',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { padding: 15 } }
-                    }
-                }
-            });
         }
 
         function atualizarGraficos() {
@@ -1522,15 +1401,8 @@
                 demandas.filter(d => d.complexidade === 'inovadora').length
             ];
 
-            chartRiscos.data.datasets[0].data = [
-                riscos.filter(r => r.nivel === 'alto').length,
-                riscos.filter(r => r.nivel === 'medio').length,
-                riscos.filter(r => r.nivel === 'baixo').length
-            ];
-
             chartStatus.update();
             chartComplexidade.update();
-            chartRiscos.update();
         }
 
         // Delete demand
@@ -1540,7 +1412,6 @@
                 salvarDados('demandas', demandas);
                 atualizarTabelaDemandas();
                 atualizarMetricas();
-                atualizarSelectDemandasRiscos();
                 showToast('Demanda excluída!');
             }
         }
@@ -1591,7 +1462,6 @@
             document.querySelector('#demandas .btn-primary').onclick = salvarDemanda;
             atualizarTabelaDemandas();
             atualizarMetricas();
-            atualizarSelectDemandasRiscos();
             limparFormulario();
             showToast('Demanda atualizada com sucesso!');
         }
@@ -1869,66 +1739,7 @@
             const group = headerEl.parentElement;
             const wrap = group.querySelector('.cronograma-table-wrap');
             const isCollapsed = group.classList.toggle('collapsed');
-            wrap.style.maxHeight = isCollapsed ? '0px' : wrap.scrollHeight + 'px';
-        }
-
-        // Populate demandas select in riscos
-        function atualizarSelectDemandasRiscos() {
-            const select = document.getElementById('riscoDemandaId');
-            const atual = select.value;
-            select.innerHTML = '<option value="">Selecione a demanda...</option>';
-            demandas.forEach(d => {
-                select.innerHTML += `<option value="${d.id}" ${d.id === atual ? 'selected' : ''}>${d.id} - ${d.titulo}</option>`;
-            });
-        }
-
-        // Save risk
-        function salvarRisco() {
-            const risco = {
-                demandaId: document.getElementById('riscoDemandaId').value,
-                descricao: document.getElementById('riscoDescricao').value,
-                probabilidade: document.getElementById('riscoProbabilidade').value,
-                impacto: document.getElementById('riscoImpacto').value,
-                contingencia: document.getElementById('riscoContingencia').value,
-                nivel: document.getElementById('riscoImpacto').value
-            };
-
-            if (!risco.descricao) {
-                showToast('Descreva o risco!');
-                return;
-            }
-
-            riscos.push(risco);
-            salvarDados('riscos', riscos);
-            atualizarRiscos();
-            showToast('Risco registrado!');
-        }
-
-        // Update risks
-        function atualizarRiscos() {
-            const alto = riscos.filter(r => r.nivel === 'alto').length;
-            const medio = riscos.filter(r => r.nivel === 'medio').length;
-            const baixo = riscos.filter(r => r.nivel === 'baixo').length;
-
-            document.getElementById('riscoAltoCount').textContent = alto;
-            document.getElementById('riscoMedioCount').textContent = medio;
-            document.getElementById('riscoBaixoCount').textContent = baixo;
-
-            const tbody = document.getElementById('listaRiscos');
-            if (riscos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #666;">Nenhum risco registrado</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = riscos.map(r => `
-                <tr>
-                    <td>${r.demandaId || '-'}</td>
-                    <td>${r.descricao.substring(0, 30)}...</td>
-                    <td><span class="status-badge status-risk">${r.nivel.toUpperCase()}</span></td>
-                </tr>
-            `).join('');
-
-            atualizarMetricas();
+wrap.style.maxHeight = isCollapsed ? '0px' : wrap.scrollHeight + 'px';
         }
 
         // Add Excel row
@@ -2109,8 +1920,8 @@ Gerado por eu_gestão | TechProcess Master Agent
         }
 
         // Initialize - load data from Firebase or localStorage
-        carregarDados('demandas', dados => { demandas = dados; atualizarTabelaDemandas(); atualizarMetricas(); atualizarSelectDemandasRiscos(); });
-        carregarDados('riscos', dados => { riscos = dados; atualizarRiscos(); });
+        carregarDados('demandas', dados => { demandas = dados; atualizarTabelaDemandas(); atualizarMetricas(); });
+        carregarDados('riscos', dados => { riscos = dados; });
         carregarDados('anotacoes', dados => { anotacoes = dados; atualizarTabelaAnotacoes(); atualizarMetricas(); });
         carregarDados('anotacoesArquivo', dados => { anotacoesArquivo = dados; atualizarTabelaArquivo(); });
         document.getElementById('anotacaoData').value = new Date().toISOString().split('T')[0];
