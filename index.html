@@ -1018,24 +1018,7 @@
                     <div class="card-title">Anotações Arquivadas</div>
                     <span class="anotacao-count" id="arquivoCount">0 arquivadas</span>
                 </div>
-                <div style="overflow-x: auto;">
-                    <table class="data-table" id="tabelaArquivo">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Título</th>
-                                <th>Anotação</th>
-                                <th>Data Arquivo</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpoTabelaArquivo">
-                            <tr>
-                                <td colspan="5" style="text-align: center; color: #666;">Nenhuma anotação arquivada</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div id="arquivoAnotacoes" style="overflow-x: auto;"></div>
             </div>
         </div>
 
@@ -1553,41 +1536,67 @@
         }
 
         function atualizarTabelaArquivo() {
-            const tbody = document.getElementById('corpoTabelaArquivo');
+            const container = document.getElementById('arquivoAnotacoes');
             const counter = document.getElementById('arquivoCount');
             counter.textContent = `${anotacoesArquivo.length} arquivad${anotacoesArquivo.length === 1 ? 'a' : 'as'}`;
             if (anotacoesArquivo.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">Nenhuma anotação arquivada</td></tr>';
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 30px;">Nenhuma anotação arquivada</p>';
                 return;
             }
 
-            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-            const sorted = [...anotacoesArquivo].map((a, i) => ({...a, _idx: i})).sort((a, b) => new Date(b.dataArquivo) - new Date(a.dataArquivo));
+            const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            const mesesCurto = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+            const agrupado = {};
 
-            tbody.innerHTML = sorted.map(a => {
-                const d = new Date(a.data + 'T00:00:00');
-                const dia = d.getDate().toString().padStart(2,'0');
-                const mes = meses[d.getMonth()];
-                const ano = d.getFullYear();
-                const textoResumido = a.texto.length > 100 ? a.texto.substring(0, 100) + '...' : a.texto;
-                const dataArq = new Date(a.dataArquivo).toLocaleDateString('pt-BR');
-                return `
-                <tr>
-                    <td>
-                        <div class="anotacao-data-badge">
-                            <span class="dia">${dia}</span>
-                            <span class="mes-ano">${mes} ${ano}</span>
-                        </div>
-                    </td>
-                    <td><strong style="color: #ffc800;">${a.titulo}</strong></td>
-                    <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
-                    <td style="font-family: 'Share Tech Mono', monospace; font-size: 13px; color: #999;">${dataArq}</td>
-                    <td style="white-space: nowrap;">
-                        <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="restaurarAnotacao(${a._idx})">RESTAURAR</button>
-                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirDoArquivo(${a._idx})">EXCLUIR</button>
-                    </td>
-                </tr>`;
-            }).join('');
+            anotacoesArquivo.forEach((a, i) => {
+                const dt = new Date(a.data + 'T00:00:00');
+                const chave = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                if (!agrupado[chave]) agrupado[chave] = [];
+                agrupado[chave].push({...a, _idx: i});
+            });
+
+            const chavesOrdenadas = Object.keys(agrupado).sort().reverse();
+
+            let html = '';
+            chavesOrdenadas.forEach((chave, idx) => {
+                const [ano, mes] = chave.split('-');
+                const lista = agrupado[chave];
+                const isFirst = idx === 0;
+                html += `<div class="cronograma-mes-group${isFirst ? '' : ' collapsed'}">
+                    <div class="cronograma-mes-header" onclick="alternarMesCronograma(this)">
+                        <span>${meses[parseInt(mes) - 1]} ${ano} <span class="mes-count">${lista.length} anotaç${lista.length === 1 ? 'ão' : 'ões'}</span></span>
+                        <span class="cronograma-toggle">▼</span>
+                    </div>
+                    <div class="cronograma-table-wrap" style="max-height: ${isFirst ? '' : '0px'};">
+                        <table class="data-table"><thead><tr><th>Data</th><th>Título</th><th>Anotação</th><th>Data Arquivo</th><th>Ações</th></tr></thead><tbody>`;
+                lista.forEach(a => {
+                    const d = new Date(a.data + 'T00:00:00');
+                    const dia = d.getDate().toString().padStart(2,'0');
+                    const mesCurto = mesesCurto[d.getMonth()];
+                    const anoNum = d.getFullYear();
+                    const textoResumido = a.texto.length > 100 ? a.texto.substring(0, 100) + '...' : a.texto;
+                    const dataArq = new Date(a.dataArquivo).toLocaleDateString('pt-BR');
+                    html += `
+                    <tr>
+                        <td>
+                            <div class="anotacao-data-badge">
+                                <span class="dia">${dia}</span>
+                                <span class="mes-ano">${mesCurto} ${anoNum}</span>
+                            </div>
+                        </td>
+                        <td><strong style="color: #ffc800;">${a.titulo}</strong></td>
+                        <td><span class="anotacao-texto-preview" title="${a.texto.replace(/"/g, '&quot;')}">${textoResumido}</span></td>
+                        <td style="font-family: 'Share Tech Mono', monospace; font-size: 13px; color: #999;">${dataArq}</td>
+                        <td style="white-space: nowrap;">
+                            <button class="btn btn-tornar-demanda" style="padding: 5px 10px; font-size: 11px;" onclick="restaurarAnotacao(${a._idx})">RESTAURAR</button>
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="excluirDoArquivo(${a._idx})">EXCLUIR</button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div></div>';
+            });
+
+            container.innerHTML = html;
         }
 
         // --- CRONOGRAMA: Demandas agrupadas por mês ---
