@@ -661,6 +661,14 @@
         .status-concluido { background: rgba(0, 255, 136, 0.2); color: #00ff88; border: 1px solid #00ff88; }
 
         /* Cronograma month groups */
+        .cronograma-mes-group {
+            margin-top: 20px;
+        }
+
+        .cronograma-mes-group:first-child {
+            margin-top: 0;
+        }
+
         .cronograma-mes-header {
             font-family: 'Orbitron', sans-serif;
             font-size: 16px;
@@ -668,15 +676,21 @@
             color: var(--primary);
             background: rgba(0, 240, 255, 0.08);
             border-left: 4px solid var(--primary);
-            padding: 12px 20px;
-            margin-top: 20px;
-            margin-bottom: 0;
+            padding: 14px 20px;
             letter-spacing: 2px;
             text-transform: uppercase;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            transition: background 0.3s ease;
         }
 
-        .cronograma-mes-header:first-child {
-            margin-top: 0;
+        .cronograma-mes-header:hover {
+            background: rgba(0, 240, 255, 0.15);
         }
 
         .cronograma-mes-header .mes-count {
@@ -684,6 +698,22 @@
             font-size: 13px;
             color: var(--secondary);
             margin-left: 10px;
+        }
+
+        .cronograma-toggle {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            color: var(--primary);
+            transition: transform 0.3s ease;
+        }
+
+        .cronograma-mes-group.collapsed .cronograma-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .cronograma-table-wrap {
+            overflow: hidden;
+            transition: max-height 0.35s ease;
         }
 
         .cronograma-status-select {
@@ -1761,12 +1791,18 @@
             const chavesOrdenadas = Object.keys(agrupado).sort().reverse();
 
             let html = '';
-            chavesOrdenadas.forEach(chave => {
+            chavesOrdenadas.forEach((chave, idx) => {
                 const [ano, mes] = chave.split('-');
                 const lista = agrupado[chave];
                 const concluidas = lista.filter(d => d.status === 'concluido').length;
-                html += `<div class="cronograma-mes-header">${meses[parseInt(mes) - 1]} ${ano} <span class="mes-count">${lista.length} demanda${lista.length !== 1 ? 's' : ''} | ${concluidas} concluída${concluidas !== 1 ? 's' : ''}</span></div>`;
-                html += `<table class="data-table"><thead><tr><th>ID</th><th>Título</th><th>Prioridade</th><th>SLA</th><th>Prazo</th><th>Status</th></tr></thead><tbody>`;
+                const isFirst = idx === 0;
+                html += `<div class="cronograma-mes-group${isFirst ? '' : ' collapsed'}">
+                    <div class="cronograma-mes-header" onclick="alternarMesCronograma(this)">
+                        <span>${meses[parseInt(mes) - 1]} ${ano} <span class="mes-count">${lista.length} demanda${lista.length !== 1 ? 's' : ''} | ${concluidas} concluída${concluidas !== 1 ? 's' : ''}</span></span>
+                        <span class="cronograma-toggle">▼</span>
+                    </div>
+                    <div class="cronograma-table-wrap" style="max-height: ${isFirst ? '' : '0px'};">
+                        <table class="data-table"><thead><tr><th>ID</th><th>Título</th><th>Prioridade</th><th>SLA</th><th>Prazo</th><th>Status</th></tr></thead><tbody>`;
                 lista.forEach(d => {
                     html += `<tr>
                         <td><strong>${d.id}</strong></td>
@@ -1783,10 +1819,18 @@
                         </td>
                     </tr>`;
                 });
-                html += '</tbody></table>';
+                html += '</tbody></table></div></div>';
             });
 
             container.innerHTML = html;
+        }
+
+        // Toggle month group in cronograma
+        function alternarMesCronograma(headerEl) {
+            const group = headerEl.parentElement;
+            const wrap = group.querySelector('.cronograma-table-wrap');
+            const isCollapsed = group.classList.toggle('collapsed');
+            wrap.style.maxHeight = isCollapsed ? '0px' : wrap.scrollHeight + 'px';
         }
 
         // Populate demandas select in riscos
