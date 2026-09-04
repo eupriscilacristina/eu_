@@ -810,7 +810,6 @@
             <button class="nav-tab" onclick="showPanel('controleAnotacoes')">CONTROLE ANOTAÇÕES</button>
             <button class="nav-tab" onclick="showPanel('demandas')">DEMANDAS</button>
             <button class="nav-tab" onclick="showPanel('cronograma')">CRONOGRAMA</button>
-            <button class="nav-tab" onclick="showPanel('relatorios')">RELATÓRIOS</button>
         </nav>
 
         <!-- Dashboard Panel -->
@@ -1040,93 +1039,7 @@
             </div>
         </div>
 
-        <!-- Relatórios Panel -->
-        <div id="relatorios" class="panel">
-            <div class="section-title">RELATÓRIOS EXECUTIVOS</div>
-            <div class="cards-grid">
-                <div class="tech-card">
-                    <div class="card-header">
-                        <div class="card-icon">📄</div>
-                        <div class="card-title">Sumário Executivo</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Título do Relatório</label>
-                        <input type="text" class="form-input" id="relTitulo" placeholder="Relatório de Gestão de Processos">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Período de Referência</label>
-                        <input type="text" class="form-input" id="relPeriodo" placeholder="Ex: Agosto 2026">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Resumo Executivo</label>
-                        <textarea class="form-textarea" id="relResumo" style="min-height: 150px;" placeholder="Contexto geral, objetivos alcançados e métricas de sucesso..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Indicadores de Sucesso</label>
-                        <textarea class="form-textarea" id="relIndicadores" placeholder="Liste as métricas e KPIs atingidos..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Recomendações</label>
-                        <textarea class="form-textarea" id="relRecomendacoes" placeholder="Próximos passos e ações recomendadas..."></textarea>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="gerarRelatorio()">GERAR RELATÓRIO</button>
-                        <button class="btn btn-secondary" onclick="exportarWord()">EXPORTAR WORD</button>
-                    </div>
-                </div>
-
-                <div class="tech-card">
-                    <div class="card-header">
-                        <div class="card-icon">📊</div>
-                        <div class="card-title">Dados para Excel</div>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table" id="tabelaExcel">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Atividade</th>
-                                    <th>Responsável</th>
-                                    <th>Status</th>
-                                    <th>Prazo Est.</th>
-                                    <th>Prazo Real</th>
-                                    <th>Impacto</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoTabelaExcel">
-                                <tr>
-                                    <td><input type="text"></td>
-                                    <td><input type="text"></td>
-                                    <td><input type="text"></td>
-                                    <td>
-                                        <select>
-                                            <option value="pendente">Pendente</option>
-                                            <option value="andamento">Em Andamento</option>
-                                            <option value="concluido">Concluído</option>
-                                            <option value="atrasado">Atrasado</option>
-                                        </select>
-                                    </td>
-                                    <td><input type="text"></td>
-                                    <td><input type="text"></td>
-                                    <td>
-                                        <select>
-                                            <option value="alto">Alto</option>
-                                            <option value="medio">Médio</option>
-                                            <option value="baixo">Baixo</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="adicionarLinhaExcel()">+ ADICIONAR LINHA</button>
-                        <button class="btn btn-secondary" onclick="exportarExcel()">EXPORTAR EXCEL</button>
-                    </div>
-                </div>
-            </div>
         </div>
-    </div>
 
     <div class="toast" id="toast">
         <span class="toast-icon">✓</span>
@@ -1784,109 +1697,7 @@
 wrap.style.maxHeight = isCollapsed ? '0px' : wrap.scrollHeight + 'px';
         }
 
-        // Add Excel row
-        function adicionarLinhaExcel() {
-            const tbody = document.getElementById('corpoTabelaExcel');
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td><input type="text"></td>
-                <td><input type="text"></td>
-                <td><input type="text"></td>
-                <td>
-                    <select>
-                        <option value="pendente">Pendente</option>
-                        <option value="andamento">Em Andamento</option>
-                        <option value="concluido">Concluído</option>
-                        <option value="atrasado">Atrasado</option>
-                    </select>
-                </td>
-                <td><input type="text"></td>
-                <td><input type="text"></td>
-                <td>
-                    <select>
-                        <option value="alto">Alto</option>
-                        <option value="medio">Médio</option>
-                        <option value="baixo">Baixo</option>
-                    </select>
-                </td>
-            `;
-            showToast('Linha adicionada!');
-        }
-
-        // Generate report
-        function gerarRelatorio() {
-            const titulo = document.getElementById('relTitulo').value || 'Relatório de Gestão';
-            const periodo = document.getElementById('relPeriodo').value || new Date().toLocaleDateString('pt-BR');
-            const resumo = document.getElementById('relResumo').value || 'A definir...';
-            const indicadores = document.getElementById('relIndicadores').value || 'A definir...';
-            const recomendacoes = document.getElementById('relRecomendacoes').value || 'A definir...';
-
-            const report = `
-RELATÓRIO EXECUTIVO - ${titulo}
-Período: ${periodo}
-Data de Geração: ${new Date().toLocaleDateString('pt-BR')}
-
-═══════════════════════════════════════════════
-
-RESUMO EXECUTIVO
-${resumo}
-
-═══════════════════════════════════════════════
-
-INDICADORES DE SUCESSO
-${indicadores}
-
-═══════════════════════════════════════════════
-
-RECOMENDAÇÕES
-${recomendacoes}
-
-═══════════════════════════════════════════════
-
-DADOS CONSOLIDADOS
-Total de Demandas: ${demandas.length}
-Em Andamento: ${demandas.filter(d => d.status === 'andamento').length}
-Concluídas: ${demandas.filter(d => d.status === 'concluido').length}
-Riscos Identificados: ${riscos.length}
-
-Gerado por eu_gestão | TechProcess Master Agent
-            `.trim();
-
-            const blob = new Blob([report], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio_${periodo.replace(/\s/g, '_')}.txt`;
-            a.click();
-            showToast('Relatório gerado!');
-        }
-
-        // Export to Excel (CSV)
-        function exportarExcel() {
-            const table = document.getElementById('tabelaExcel');
-            let csv = [];
-            const rows = table.querySelectorAll('tr');
-
-            rows.forEach(row => {
-                const cols = row.querySelectorAll('td, th');
-                const rowData = [];
-                cols.forEach(col => {
-                    const input = col.querySelector('input, select');
-                    rowData.push(input ? input.value : col.textContent);
-                });
-                csv.push(rowData.join(';'));
-            });
-
-            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dados_excel.csv';
-            a.click();
-            showToast('Exportado para Excel!');
-        }
-
-        // Export cronograma
+// Export cronograma
         function exportarCronograma() {
             let csv = ['ID;Título;Solicitante;Complexidade;Prioridade;SLA;Prazo;Status;Data Criação'];
 
@@ -1901,64 +1712,6 @@ Gerado por eu_gestão | TechProcess Master Agent
             a.download = 'cronograma.csv';
             a.click();
             showToast('Cronograma exportado!');
-        }
-
-        // Export to Word (HTML format)
-        function exportarWord() {
-            const titulo = document.getElementById('relTitulo').value || 'Relatório';
-            const periodo = document.getElementById('relPeriodo').value || '';
-            const resumo = document.getElementById('relResumo').value || '';
-            const indicadores = document.getElementById('relIndicadores').value || '';
-            const recomendacoes = document.getElementById('relRecomendacoes').value || '';
-
-            const html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>${titulo}</title>
-    <style>
-        body { font-family: Calibri, sans-serif; margin: 40px; }
-        h1 { color: #0066cc; border-bottom: 2px solid #0066cc; padding-bottom: 10px; }
-        h2 { color: #333; margin-top: 30px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #0066cc; color: white; }
-    </style>
-</head>
-<body>
-    <h1>${titulo}</h1>
-    <p><strong>Período:</strong> ${periodo}</p>
-    <p><strong>Data de Geração:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
-
-    <h2>Resumo Executivo</h2>
-    <p>${resumo}</p>
-
-    <h2>Indicadores de Sucesso</h2>
-    <p>${indicadores}</p>
-
-    <h2>Recomendações</h2>
-    <p>${recomendacoes}</p>
-
-    <h2>Dados Consolidados</h2>
-    <table>
-        <tr><th>Métrica</th><th>Valor</th></tr>
-        <tr><td>Total de Demandas</td><td>${demandas.length}</td></tr>
-        <tr><td>Em Andamento</td><td>${demandas.filter(d => d.status === 'andamento').length}</td></tr>
-        <tr><td>Concluídas</td><td>${demandas.filter(d => d.status === 'concluido').length}</td></tr>
-        <tr><td>Riscos Identificados</td><td>${riscos.length}</td></tr>
-    </table>
-</body>
-</html>
-            `.trim();
-
-            const blob = new Blob([html], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `relatorio_${periodo.replace(/\s/g, '_')}.doc`;
-            a.click();
-            showToast('Exportado para Word!');
         }
 
         // Initialize - load data from Firebase or localStorage
