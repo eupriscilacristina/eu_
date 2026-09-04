@@ -1005,6 +1005,7 @@
             </div>
 
             <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-primary" id="btnVisualizarDemandas" onclick="alternarVisualizacaoDemandas()">VISUALIZAR DEMANDAS</button>
                 <button class="btn btn-secondary" onclick="exportarCronograma()">EXPORTAR CRONOGRAMA</button>
             </div>
         </div>
@@ -1677,13 +1678,23 @@
         }
 
         // --- CRONOGRAMA: Demandas agrupadas por mês ---
+        let cronogramaVisualizacaoLista = false;
+
         function atualizarCronogramaDemandas() {
             const container = document.getElementById('cronogramaDemandas');
             const counter = document.getElementById('cronogramaCount');
             counter.textContent = `${demandas.length} demanda${demandas.length !== 1 ? 's' : ''}`;
 
+            const btn = document.getElementById('btnVisualizarDemandas');
+            if (btn) btn.textContent = cronogramaVisualizacaoLista ? 'VISUALIZAR POR MÊS' : 'VISUALIZAR DEMANDAS';
+
             if (demandas.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #666; padding: 30px;">Nenhuma demanda registrada. Crie demandas no painel DEMANDAS.</p>';
+                return;
+            }
+
+            if (cronogramaVisualizacaoLista) {
+                container.innerHTML = renderListaDemandas();
                 return;
             }
 
@@ -1732,6 +1743,37 @@
             });
 
             container.innerHTML = html;
+        }
+
+        // Lista completa de demanda (visualização plana)
+        function renderListaDemandas() {
+            const sorted = [...demandas].map((d, i) => ({...d, _index: i})).sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+            let html = '<table class="data-table"><thead><tr><th>Data</th><th>ID</th><th>Título</th><th>Prioridade</th><th>SLA</th><th>Status</th></tr></thead><tbody>';
+            sorted.forEach(d => {
+                const dt = new Date(d.dataCriacao).toLocaleDateString('pt-BR');
+                html += `<tr>
+                    <td style="font-family: 'Share Tech Mono', monospace; font-size: 13px; color: #999;">${dt}</td>
+                    <td><strong>${d.id}</strong></td>
+                    <td>${d.titulo}</td>
+                    <td>${d.prioridade || '-'}</td>
+                    <td style="color: #00ff88; font-weight: bold;">${d.sla || '-'}</td>
+                    <td>
+                        <select class="cronograma-status-select" onchange="mudarStatusDemanda(${d._index}, this.value)">
+                            <option value="pendente" ${d.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="andamento" ${d.status === 'andamento' ? 'selected' : ''}>Em Andamento</option>
+                            <option value="concluido" ${d.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+                        </select>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // Alterna entre visualização por mês e lista completa
+        function alternarVisualizacaoDemandas() {
+            cronogramaVisualizacaoLista = !cronogramaVisualizacaoLista;
+            atualizarCronogramaDemandas();
         }
 
         // Toggle month group in cronograma
