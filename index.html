@@ -125,6 +125,32 @@
             text-transform: uppercase;
         }
 
+        /* Demandas layout */
+        #demandas .cards-grid {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        #demandas .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 25px;
+        }
+
+        .form-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-grid .form-group-full {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            #demandas .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
@@ -787,49 +813,47 @@
                         <div class="card-icon">➕</div>
                         <div class="card-title">Nova Demanda</div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">ID da Demanda</label>
-                        <input type="text" class="form-input" id="demandaId" placeholder="ex: DEM-001">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Título</label>
-                        <input type="text" class="form-input" id="demandaTitulo" placeholder="Título da demanda">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Descrição</label>
-                        <textarea class="form-textarea" id="demandaDescricao" placeholder="Descreva a demanda em detalhes..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Solicitante</label>
-                        <input type="text" class="form-input" id="demandaSolicitante" placeholder="Nome do solicitante">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Complexidade</label>
-                        <select class="form-select" id="demandaComplexidade" onchange="calcularSLA()">
-                            <option value="">Selecione...</option>
-                            <option value="baixa">Baixa</option>
-                            <option value="media">Média</option>
-                            <option value="alta">Alta</option>
-                            <option value="inovadora">Inovadora (Pesquisa)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Prioridade</label>
-                        <select class="form-select" id="demandaPrioridade" onchange="calcularSLA()">
-                            <option value="">Selecione...</option>
-                            <option value="critica">Crítica</option>
-                            <option value="alta">Alta</option>
-                            <option value="media">Média</option>
-                            <option value="baixa">Baixa</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">SLA Automático (dias úteis)</label>
-                        <input type="text" class="form-input" id="demandaSLA" placeholder="Selecione Complexidade e Prioridade" readonly style="background: #1a1a2e; color: #00ff88; font-weight: bold; cursor: default;">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Prazo Estimado (dias úteis)</label>
-                        <input type="number" class="form-input" id="demandaPrazo" placeholder="Ex: 15">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">ID da Demanda</label>
+                            <input type="text" class="form-input" id="demandaId" placeholder="ex: DEM-001">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Título</label>
+                            <input type="text" class="form-input" id="demandaTitulo" placeholder="Título da demanda">
+                        </div>
+                        <div class="form-group form-group-full">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-textarea" id="demandaDescricao" placeholder="Descreva a demanda em detalhes..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Solicitante</label>
+                            <input type="text" class="form-input" id="demandaSolicitante" placeholder="Nome do solicitante">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Complexidade</label>
+                            <select class="form-select" id="demandaComplexidade" onchange="calcularSLA()">
+                                <option value="">Selecione...</option>
+                                <option value="baixa">Baixa</option>
+                                <option value="media">Média</option>
+                                <option value="alta">Alta</option>
+                                <option value="inovadora">Inovadora (Pesquisa)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-select" id="demandaPrioridade" onchange="calcularSLA()">
+                                <option value="">Selecione...</option>
+                                <option value="critica">Crítica</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Média</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SLA Automático (dias úteis)</label>
+                            <input type="text" class="form-input" id="demandaSLA" placeholder="Selecione Complexidade e Prioridade" readonly style="background: #1a1a2e; color: #00ff88; font-weight: bold; cursor: default;">
+                        </div>
                     </div>
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="salvarDemanda()">SALVAR DEMANDA</button>
@@ -851,14 +875,13 @@
                                     <th>Complex.</th>
                                     <th>Prior.</th>
                                     <th>SLA</th>
-                                    <th>Prazo</th>
                                     <th>Status</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="corpoTabelaDemandas">
                                 <tr>
-                                    <td colspan="6" style="text-align: center; color: #666;">Nenhuma demanda registrada</td>
+                                    <td colspan="7" style="text-align: center; color: #666;">Nenhuma demanda registrada</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1274,7 +1297,7 @@
                 complexidade: document.getElementById('demandaComplexidade').value,
                 prioridade: document.getElementById('demandaPrioridade').value,
                 sla: document.getElementById('demandaSLA').value,
-                prazo: document.getElementById('demandaPrazo').value,
+                prazo: '',
                 status: 'pendente',
                 dataCriacao: new Date().toISOString()
             };
@@ -1297,7 +1320,7 @@
         function atualizarTabelaDemandas() {
             const tbody = document.getElementById('corpoTabelaDemandas');
             if (demandas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #666;">Nenhuma demanda registrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">Nenhuma demanda registrada</td></tr>';
                 return;
             }
 
@@ -1308,7 +1331,6 @@
                     <td>${d.complexidade || '-'}</td>
                     <td>${d.prioridade || '-'}</td>
                     <td style="color: #00ff88; font-weight: bold;">${d.sla || '-'}</td>
-                    <td>${d.prazo || '-'} dias</td>
                     <td><span class="status-badge status-${d.status}">${d.status.toUpperCase()}</span></td>
                     <td>
                         <button style="background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid #00f0ff; padding: 4px 8px; font-size: 11px; font-family: 'Rajdhani', sans-serif; font-weight: 600; cursor: pointer; text-transform: uppercase; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 0 12px rgba(0,240,255,0.4)'" onmouseout="this.style.boxShadow='none'" onclick="editarDemanda(${i})">EDITAR</button>
@@ -1480,7 +1502,6 @@
             document.getElementById('demandaSolicitante').value = d.solicitante;
             document.getElementById('demandaComplexidade').value = d.complexidade;
             document.getElementById('demandaPrioridade').value = d.prioridade;
-            document.getElementById('demandaPrazo').value = d.prazo;
             calcularSLA();
             document.querySelector('#demandas .btn-primary').textContent = 'SALVAR EDIÇÃO';
             document.querySelector('#demandas .btn-primary').onclick = salvarEdicaoDemanda;
@@ -1497,7 +1518,6 @@
             d.complexidade = document.getElementById('demandaComplexidade').value;
             d.prioridade = document.getElementById('demandaPrioridade').value;
             d.sla = document.getElementById('demandaSLA').value;
-            d.prazo = document.getElementById('demandaPrazo').value;
 
             if (!d.titulo) {
                 showToast('Preencha o título da demanda!');
@@ -1517,7 +1537,7 @@
 
         // Clear form
         function limparFormulario() {
-            ['demandaId', 'demandaTitulo', 'demandaDescricao', 'demandaSolicitante', 'demandaPrazo', 'demandaSLA'].forEach(id => {
+            ['demandaId', 'demandaTitulo', 'demandaDescricao', 'demandaSolicitante', 'demandaSLA'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             ['demandaComplexidade', 'demandaPrioridade'].forEach(id => {
